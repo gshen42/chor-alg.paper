@@ -61,7 +61,7 @@ Previous work has been done on formalizing a core CP calculus and proving its co
 %
 With these theoretical foundations, people have been building practical CP languages in the form of a custom compiler for Java~\citep{giallorenzo-2024} and libraries for Haskell~\citep{shen-2023} and Rust~\citep{kashiwa-2023}, and use them to build real-world distributed applications~\citep{lugovic-2023}.
 
-Sadly, we usually don't have proofs and implementations at the same time.
+Sadly, we usually don't have proofs of correctness and practical implementations at the same time.
 %
 Proofs are for high-level calculi that are distant from how people write code, and implementations don't have any formal guarantee of the programs they generate.
 %
@@ -83,6 +83,6 @@ Given that more and more languages are adapting algebraic effects as an abstract
 
 In this paper, we outline our plan for building a verified CP language with algebraic effects.
 %
-In particular, we show how to define choreographies as computations with uninterpreted effects and EPP as giving location-varying (\gs{is this a word?}) interpretations to those effects.
+In particular, we show how to define choreographies as computations with uninterpreted effects and EPP as giving location-varying interpretations to those effects.
 %
 We state the correctness condition for EPP in the end.

@@ -29,23 +29,29 @@
   %
   In CP, instead of implementing individual programs for each node, the programmer writes one, unified program, called a \emph{choreography}, that is then compiled to individual programs for each node via a step called \emph{endpoint projection} (EPP).
   %
-  A correct CP language guarantees soundness and completeness of EPP, which further implies that the resulting programs are deadlock-free when running together.
+  A correct CP language ensures soundness and completeness of EPP, which further implies that the resulting programs are deadlock-free when running together.
   %
-  Prior work have explored using formal reasoning systema to build verified CP languages.
+  Prior work have explored using formal reasoning systems to build verified CP languages.
   %
   However, they fall short of being widely applicable because they are standalone languages that don't integrate with existing language infrastures.
 
-  We propose implementing a CP language \emph{as a library} using algebraic effects and proving its correctness, both in proof assistant Agda.
+  We propose using algebraic effects to implement a verified \emph{library-level} CP language.
   %
-  We use algebraic effects to give a mixed-embedding of CP with CP-specific effects and control flows deeply embedded --- enabling reasoning about them --- pure computations and variable bindings shallowly embedded --- enabling seamless integration with the host language.
+  Our use of algebraic effects is two-fold:
   %
-  We believe the resulting implementation can be easily either extracted from Agda or ported to a different language that supports algebraic effects without many changes, thus bringing CP to a broader audience with greater confidence in its correctness.
+  First, as an implementation abstraction, they allow us to define choreographies as computations with user-defined effects and EPP as providing location-varying~(\gs{is this a word?}) interpretations for those effects, all within the host language.
+  %
+  Second, as a proof technique, they provide abstract syntax trees for choreographies where CP-specific effects and control flows are manifest, enabling reasoning about them.
+  %
+  We carry out our verified implementation in the proof assistant Agda.
+  %
+  We believe the resulting implementation can be easily either extracted from Agda or ported to a different language that natively supports or can simulate algebraic effects, thus bringing CP to a broader audience with greater confidence in its correctness.
 
-  In this paper, we outline our plan for building a verified CP language with algebraic effects.
+  In this paper, we outline our plan for building a verified library-level CP language with algebraic effects.
   %
-  In particular, we show how to define choreographies as computations with uninterpreted effects and EPP as giving location-varying (\gs{is this a word?}) interpretations to those effects.
+  In particular, we show how to define choreographies and EPP with algebraic effects in Agda.
   %
-  We state the correctness condition for EPP in the end.
+  In the end, we state the correctness condition for EPP.
 \end{abstract}
 
 \begin{document}
