@@ -1,0 +1,88 @@
+\section{Introduction}
+
+Choreographic programming~(CP)~\citep{montesi-2013, montesi-2023} is a paradigm for programming distributed applications that run on multiple nodes.
+%
+In CP, instead of programming each node separately, the programmer writes one, unified program, called a \emph{choreography}, that is then compiled to individual programs for each node via a compilation step called \emph{endpoint projection} (EPP).
+%
+For example, one can implement a distributed pipeline that utilizes the processing power of nodes A, B, and C as a choreography:
+%
+\begin{equation*}
+  \begin{split}
+    x \leftarrow \; & \locally{A}{\mathsf{getInput}} \\
+    y \leftarrow \; & \comm{A}{B}{\mathsf{process}_A(x)} \\
+    z \leftarrow \; & \comm{B}{C}{\mathsf{process}_B(y)} \\
+    w \leftarrow \; & \comm{C}{A}{\mathsf{process}_C(z)} \\
+                    & \locally{A}{\mathsf{showResults}(w)} \\
+  \end{split}
+\end{equation*}
+%
+Here, we use $\leftarrow$ for variable bindings, $\locally{\_}{\_}$ for node-local computations, $\comm{\_}{\_}{\_}$ for communication between nodes.
+%
+In this choreography, A first gets some input locally, then passes it around to B and C, with each node calling its process function on the data.
+%
+The result is passed back to A and printed out.
+%
+To get the deployable implementation for each node, we can apply endpoint projection on the choreography, which generates the following individual programs for A, B, and C:
+%
+\[
+\begin{minipage}{.3\textwidth}
+  \begin{equation*}
+    \begin{split}
+      x \leftarrow \; & \mathsf{getInput} \\
+                      & \mathsf{send}(B, \mathsf{process}_A(x)) \\
+      w \leftarrow \; & \mathsf{recv}(C) \\
+                      & \mathsf{showResult}(w)
+    \end{split}
+  \end{equation*}
+\end{minipage}
+\hfill\vline\hfill
+\begin{minipage}{.3\textwidth}
+  \begin{equation*}
+    \begin{split}
+      y \leftarrow \; & \mathsf{recv}(A) \\
+                      & \mathsf{send}(C, \mathsf{process}_B(y)) \\
+    \end{split}
+  \end{equation*}
+\end{minipage}
+\hfill\vline\hfill
+\begin{minipage}{.3\textwidth}
+  \begin{equation*}
+    \begin{split}
+      z \leftarrow \; & \mathsf{recv}(B) \\
+                      & \mathsf{send}(A, \mathsf{process}_C(z)) \\
+    \end{split}
+  \end{equation*}
+\end{minipage}
+\]
+
+A correct CP language guarantees soundness and completeness of EPP, which further implies that the resulting programs are deadlock-free when running together.
+%
+Previous work has been done on formalizing a core CP calculus and proving its correctness~\citep{cruzfilipe-2020, cruzfilipe-2022, hirsch-2022}.
+%
+With these theoretical foundations, people have been building practical CP languages in the form of a custom compiler for Java~\citep{giallorenzo-2024} and libraries for Haskell~\citep{shen-2023} and Rust~\citep{kashiwa-2023}, and use them to build real-world distributed applications~\citep{lugovic-2023}.
+
+Sadly, we usually don't have proofs and implementations at the same time.
+%
+Proofs are for high-level calculi that are distant from how people write code, and implementations don't have any formal guarantee of the programs they generate.
+%
+Recent efforts have been made to use a formal reasoning system to define and prove the correctness of CP and then extract a verified implementation~\citep{pohjola-2022, cruzfillipe-2023}.
+%
+However, these verified implementations fall short of being widely applicable because they often define a standalone language for CP, making it hard to integrate with existing language infrastructures.
+%
+In particular, these verified implementations define a deep embedding of CP in the host language with variables being in a separate semantic category, making it hard to apply normal host language functions on them without complicated marshalling and unmarshalling (\gs{Is this clear enough? I could go deeper into how their approach sucks, but not sure if it's worth the space.}).
+%
+On the other hand, a shallow embedding approach would not suffice either because proofs need access to the abstract syntax trees to reason about them.
+
+To that end, we propose using a \emph{mixed embedding} approach to build a verified CP language in proof assistant Agda.
+%
+Our mixed embedding utilizes algebraic effects to represent CP with CP-specific effects and control flows deeply embedded --- enalbing reasoning about them --- pure computations and variable bindings shallowly embedded --- enabling seamless integration with the host language.
+%
+The resulting implementation can be easily either extracted from Agda or ported to a different language that supports algebraic effects without many changes.
+%
+Given that more and more languages are adapting algebraic effects as an abstraction for user-defined effects and some even support efficient complilation of them with performance on par with native code, we believe this approach can bring CP to a broader audience with greater confidence in its correctness.
+
+In this paper, we outline our plan for building a verified CP language with algebraic effects.
+%
+In particular, we show how to define choreographies as computations with uninterpreted effects and EPP as giving location-varying (\gs{is this a word?}) interpretations to those effects.
+%
+We state the correctness condition for EPP in the end.
