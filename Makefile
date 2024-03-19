@@ -1,6 +1,9 @@
 OUTPUT_DIR = _build
 TEX_FILES := 00-main.tex  \
-             01-intro.tex
+             01-intro.tex \
+             02-algeff.tex \
+             03-choreo.tex \
+             04-future.tex
 TEX_FILES := $(patsubst %, $(OUTPUT_DIR)/%, $(TEX_FILES))
 
 open: $(OUTPUT_DIR)/00-main.pdf
