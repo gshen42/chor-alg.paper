@@ -1,3 +1,65 @@
 \section{A Minimal Algebraic Effects Framework in Agda}
 
 In this section, we define a minimal algebraic effects framework in Agda, which we will use to implement CP in the next section.
+%
+No prior knowledge of algebraic effects is assumed, and we introduce every concept as we go.
+%
+Algebraic effects provide an abstraction for defining and interpreting effectful computations with a solid foundation in category theory.
+%
+Each concept is first introduced from a mathematical perspective and then related to programming.
+%
+We also use stateful computations as an example to demonstrate the use of each concept.
+%
+Our presentation is influenced by \citet{bauer-2019} and \citet{kidney-2023} but is minimized for our purpose.
+
+\begin{code}[hide]
+open import Data.Product using (Σ; Σ-syntax; _,_)
+open import Function using (_∘_)
+
+infix 21 ⟦_⟧
+\end{code}
+
+\subsection{Signatures and Algebras}
+
+An effect signature \textit{Sig}, or simply signature, specifies the interface of an effectful computation, which includes a type \textit{Op} of operations and a \textit{Arity} function giving the arity of each operation:
+%
+\begin{center}\begin{code}
+record Sig : Set₁ where
+  constructor _◁_
+  field
+    Op : Set
+    Arity : Op → Set
+\end{code}\end{center}
+%
+\begin{code}[hide]
+open Sig
+\end{code}
+
+A signature $\mathbb{F}$ induces a functor $[\![ \mathbb{F} ]\!]$ that interprets all the operations as functions on a carrier set $X$:
+%
+\begin{center}\begin{code}
+⟦_⟧ : Sig → Set → Set
+⟦ Op ◁ Ar ⟧ X = Σ[ o ∈ Op ] (Ar o → X)
+
+_-Alg[_] : Sig → Set → Set
+𝔽 -Alg[ X ] = ⟦ 𝔽 ⟧ X → X
+\end{code}\end{center}
+
+\subsection{Free Algebras}
+
+\begin{center}\begin{code}
+data Term (𝔽 : Sig) (A : Set) : Set where
+  var : A → Term 𝔽 A
+  op : ⟦ 𝔽 ⟧ (Term 𝔽 A) → Term 𝔽 A
+
+perform : ∀ {𝔽} (o : Op 𝔽) → Term 𝔽 (Arity 𝔽 o)
+perform o = op (o , var)
+\end{code}\end{center}
+
+\subsection{Effect Handlers}
+
+\begin{center}\begin{code}
+interp : ∀ {𝔽} {X A} → 𝔽 -Alg[ X ] → (A → X) → Term 𝔽 A → X
+interp alg f (var x)      = f x
+interp alg f (op (o , k)) = alg (o , interp alg f ∘ k)
+\end{code}\end{center}
