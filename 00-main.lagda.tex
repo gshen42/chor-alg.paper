@@ -24,6 +24,7 @@
 \fi
 
 \newcommenter{\gs}{blue}{GS}
+\newcommenter{\lk}{red}{LK}
 
 \title{Toward Verified Library-Level Choreographic Programming with Algebraic Effects}
 
@@ -32,29 +33,36 @@
   %
   In CP, instead of implementing individual programs for each node, the programmer writes one, unified program, called a \emph{choreography}, that is then compiled to individual programs for each node via a step called \emph{endpoint projection} (EPP).
   %
-  A correct CP language ensures soundness and completeness of EPP, which further implies that the resulting programs are deadlock-free when running together.
+  A correct CP language ensures soundness and completeness \lk{We need to make sure we nail down what soundness and completeness mean in our setting.} of EPP, which further implies that the resulting programs are deadlock-free when running together.
   %
   Prior work have explored using formal reasoning systems to build verified CP languages.
   %
   However, they fall short of being widely applicable because they are standalone languages that don't integrate with existing language infrastures.
 
-  We propose using algebraic effects to implement a verified \emph{library-level} CP language.
+  We propose using algebraic effects to implement a \lk{mechanically} verified \emph{library-level} CP language. \lk{We should say ``mechanically verified'' to distinguish from e.g., the deadlock-freedom-by-design paper, where they have proofs of deadlock freedom, etc, but not mechanized ones.}
   %
   Our use of algebraic effects is two-fold:
   %
-  First, as an implementation abstraction, they allow us to define choreographies as computations with user-defined effects and EPP as providing location-varying~(\gs{is this a word?}) interpretations for those effects, all within the host language.
+  First, as an implementation abstraction, they allow us to define choreographies as computations with user-defined effects and EPP as providing location-varying~(\gs{is this a word?}) interpretations for those effects, all within the host language. \lk{I'd say ``location-aware'' or ``location-specific''.}
   %
-  Second, as a proof technique, they provide abstract syntax trees for choreographies where CP-specific effects and control flows are manifest, enabling reasoning about them.
+  Second, as a proof technique, they provide abstract syntax trees for choreographies where CP-specific effects and control flows are manifest, enabling reasoning about them. \lk{when someone mentions ASTs I think ``deep embedding'', so we want to make sure to explain where we fall on the shallow-to-deep spectrum.}
   %
   We carry out our verified implementation in the proof assistant Agda.
   %
   We believe the resulting implementation can be easily either extracted from Agda or ported to a different language that natively supports or can simulate algebraic effects, thus bringing CP to a broader audience with greater confidence in its correctness.
+  \lk{What kind of ``greater confidence''?  If you ported it to Ocaml (``native'' algebraic effects) or Haskell (``simulated'' algebraic effects) then you wouldn't have any formal guarantee.}
+
+  \lk{I would put it this way: LLCP brings CP to a broader audience, and therefore we should care a lot about its correctness, but nobody so far has even figured out how to state the correctness properties we want in a way that's specific to LLCP.  So that's the gap we want to close.}
 
   In this paper, we outline our plan for building a verified library-level CP language with algebraic effects.
   %
   In particular, we show how to define choreographies and EPP with algebraic effects in Agda.
   %
   In the end, we state the correctness condition for EPP.
+
+  \lk{Although we're using Agda, the approach is not Agda-specific and could work in any proof assistant based on constructive type theory.}
+
+  \lk{We want to say: The algebraic-effects approach to LLCP can be thought of as a generalization of the approach that both HasChor and ChoRus take to LLCP, and so formalizing the algebraic-effects approach gives us a path to reasoning about the correctness of library-level implementations of CP.  In fact, algebraic effects are moving toward the mainstream, e.g., in languages like OCaml, and so there is an attractive implementation approach for LLCP in such languages.}
 \end{abstract}
 
 \begin{document}
