@@ -3,11 +3,101 @@
 In this section, we use the algebraic effects framework from previous section to implement a CP language.
 
 \begin{code}[hide]
-open import 02-algeff
+open import 02-algeff hiding (return; _>>=_)
+
+module 03-choreo (𝕃 : Sig) where
+
+open import Data.Product using (_,_)
+open import Data.String as String using(String)
+open import Effect.Monad using (RawMonad)
+open import Level using (Level; Setω)
+open import Relation.Binary.PropositionalEquality using (_≡_)
+open import Relation.Nullary using (Dec; yes; no)
+
+open RawMonad ⦃...⦄
+
+Loc : Set
+Loc = String
+
+-- the opaque prevents Agda from unfolding the definition, making the code more readable in certain cases
+opaque
+  _≟_ : (l l′ : Loc) → Dec (l ≡ l′)
+  _≟_ = String._≟_
+
+-- the stdlib's ⊤ is not universe-polymorphic
+record ⊤ {ℓ : Level} : Set ℓ where
+  constructor tt
 \end{code}
 
 \subsection{Processes}
 
+\begin{code}[hide]
+-- a seperate modules avoid name conflicts
+module Process where
+\end{code}
+
+\begin{code}
+  data Op : Set₁ where
+    `locally : ∀ {A} → Term 𝕃 A → Op
+    `send    : ∀ {A : Set} → Loc → A → Op
+    `recv    : ∀ {A : Set} → Loc → Op
+
+  Arity : Op → Set
+  Arity (`locally {A} _) = A
+  Arity (`send _ _) = ⊤
+  Arity (`recv {A} _) = A
+
+  ℙ : Sig
+  ℙ = Op ◁ Arity
+
+  Process : Set → Set₁
+  Process A = Term ℙ A
+\end{code}  
+
 \subsection{Choreography}
 
+\begin{code}
+At : Setω
+At = ∀ {ℓ} → Set ℓ → Loc → Set ℓ
+\end{code}
+
+\begin{code}
+module _ (_＠_ : At) where
+
+  data Op : Set₁ where
+    `comm : ∀ {A} (s r : Loc) → (Term 𝕃 A) ＠ s → Op
+
+  Arity : Op → Set _
+  Arity (`comm {A} _ r _) = A ＠ r
+
+  ℂ : Sig
+  ℂ = Op ◁ Arity
+
+Choreo : (At → Set) → Setω
+Choreo F = ∀ {_＠_ : At} → Term (ℂ _＠_) (F _＠_)
+\end{code}
+
 \subsection{Endpoint Projection}
+
+\begin{code}[hide]
+open Process
+\end{code}
+
+\begin{code}
+focus : Loc → At
+focus l A s with l ≟ s
+... | yes _ = A
+... | no  _ = ⊤
+
+epp : ∀ {F : At → Set} → Choreo F → (l : Loc) → Process (F (focus l))
+epp c l = interp alg return c
+  where
+  alg : ∀ {A} → (ℂ (focus l)) -Alg[ Term ℙ A ]
+  alg (`comm s r a , k) with l ≟ s | l ≟ r
+  ... | yes _ | yes _ = perform (`locally a) >>= k
+  ... | yes _ | no  _ = perform (`locally a) >>= (λ x → perform (`send r x)) >> k tt
+  ... | no  _ | yes _ = perform (`recv s) >>= k
+  ... | no  _ | no  _ = k tt
+\end{code}
+
+\subsection{An Example}

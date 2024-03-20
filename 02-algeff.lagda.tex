@@ -14,9 +14,48 @@ Our presentation is influenced by \citet{bauer-2019} and \citet{kidney-2023} but
 
 \begin{code}[hide]
 open import Data.Product using (Σ; Σ-syntax; _,_)
-open import Function using (_∘_)
+open import Effect.Applicative using (RawApplicative)
+open import Effect.Functor using (RawFunctor)
+open import Effect.Monad using (RawMonad)
+open import Function using (_∘_; _∘′_; _$′_)
+open import Level using (Level)
 
 infix 21 ⟦_⟧
+\end{code}
+
+\begin{code}[hide]
+-- the standard library `mkRawMonad` is not general enough for our use
+-- so we define our own version
+module _ where
+
+  private
+    variable
+      f g : Level
+
+  open RawFunctor
+  open RawApplicative
+  open RawMonad
+
+  mkRawApplicative :
+    (F : Set f → Set g) →
+    (pure : ∀ {A} → A → F A) →
+    (app : ∀ {A B} → F (A → B) → F A → F B) →
+    RawApplicative F
+  mkRawApplicative F pure app .rawFunctor ._<$>_ = app ∘′ pure
+  mkRawApplicative F pure app .pure = pure
+  mkRawApplicative F pure app ._<*>_ = app
+
+  mkRawMonad :
+    (F : Set f → Set g) →
+    (pure : ∀ {A} → A → F A) →
+    (bind : ∀ {A B} → F A → (A → F B) → F B) →
+    RawMonad F
+  mkRawMonad F pure _>>=_ .rawApplicative =
+    mkRawApplicative _ pure $′ λ mf mx → do
+      f ← mf
+      x ← mx
+      pure (f x)
+  mkRawMonad F pure _>>=_ ._>>=_ = _>>=_
 \end{code}
 
 \subsection{Signatures and Algebras}
@@ -24,10 +63,10 @@ infix 21 ⟦_⟧
 An effect signature \textit{Sig}, or simply signature, specifies the interface of an effectful computation, which includes a type \textit{Op} of operations and a \textit{Arity} function giving the arity of each operation:
 %
 \begin{center}\begin{code}
-record Sig : Set₁ where
+record Sig : Set₂ where
   constructor _◁_
   field
-    Op : Set
+    Op : Set₁
     Arity : Op → Set
 \end{code}\end{center}
 %
@@ -38,23 +77,36 @@ open Sig
 A signature $\mathbb{F}$ induces a functor $[\![ \mathbb{F} ]\!]$ that interprets all the operations as functions on a carrier set $X$:
 %
 \begin{center}\begin{code}
-⟦_⟧ : Sig → Set → Set
+⟦_⟧ : Sig → Set₁ → Set₁
 ⟦ Op ◁ Ar ⟧ X = Σ[ o ∈ Op ] (Ar o → X)
 
-_-Alg[_] : Sig → Set → Set
+_-Alg[_] : Sig → Set₁ → Set₁
 𝔽 -Alg[ X ] = ⟦ 𝔽 ⟧ X → X
 \end{code}\end{center}
 
 \subsection{Free Algebras}
 
 \begin{center}\begin{code}
-data Term (𝔽 : Sig) (A : Set) : Set where
+data Term (𝔽 : Sig) (A : Set) : Set₁ where
   var : A → Term 𝔽 A
   op : ⟦ 𝔽 ⟧ (Term 𝔽 A) → Term 𝔽 A
 
 perform : ∀ {𝔽} (o : Op 𝔽) → Term 𝔽 (Arity 𝔽 o)
 perform o = op (o , var)
+
+return : ∀ {𝔽} {A} → A → Term 𝔽 A
+return = var
+
+_>>=_ : ∀ {𝔽} {A B} → Term 𝔽 A → (A → Term 𝔽 B) → Term 𝔽 B
+var x      >>= f = f x
+op (o , k) >>= f = op (o , _>>= f ∘ k)
 \end{code}\end{center}
+
+\begin{code}[hide]
+instance
+  term-monad : ∀ {𝔽} → RawMonad (Term 𝔽)
+  term-monad = mkRawMonad _ return _>>=_ 
+\end{code}
 
 \subsection{Effect Handlers}
 
