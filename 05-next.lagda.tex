@@ -1,2 +1,5 @@
 \section{Next Steps}
 
+\lk{What are our next steps?
+- Actually prove soundness and completeness. We think that (strong) bisimulation is probably too strong; for one thing, if EPP does any optimizations, then the EPP'd choreography may not take transitions in lockstep with the original.  For another thing, if we are using a realistic network semantics that accounts for asynchrony, etc., then that will also affect the behavior of the EPP'd choreography.  A weak bisimulation is probably more appropriate.  These considerations aren't specific to the library-level CP setting, but we care about them.
+- Implement a CP framework based on our approach in a language with native support for algebraic effects, like OCaml or Koka.
