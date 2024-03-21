@@ -89,6 +89,9 @@ focus l A s with l ≟ s
 ... | yes _ = A
 ... | no  _ = ⊤
 
+global : At
+global A _ = A
+
 epp : ∀ {F : At → Set} → Choreo F → (l : Loc) → Process (F (focus l))
 epp c l = interp alg return c
   where

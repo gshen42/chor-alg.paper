@@ -2,3 +2,29 @@
 
 In this section, we discuss some future steps. In particular, how to state and prove the correctness of our CP language.
 
+\begin{code}[hide]
+open import 02-algeff
+
+module 04-proofs (𝕃 : Sig) where
+
+import 03-choreo
+open module 03-choreo′ = 03-choreo 𝕃
+open 03-choreo′.Process
+\end{code}
+
+\begin{code}
+data _⇒ᶜ_ {A : Set} : Term (ℂ global) A → Term (ℂ global) A → Set where
+  -- TBD
+
+data _⇒ⁿ_ {G : Loc → Set} :
+  ((l : Loc) → Term ℙ (G l)) → ((l : Loc) → Term ℙ (G l)) → Set where
+  -- TBD
+
+postulate
+  completeness : ∀ {F} (c c′ : Choreo F) →
+    c ⇒ᶜ c′ → epp c ⇒ⁿ epp c′
+
+  soundness : ∀ {F} (c c′ : Choreo F) →
+    epp c ⇒ⁿ epp c′ → c ⇒ᶜ c′ 
+\end{code}
+
