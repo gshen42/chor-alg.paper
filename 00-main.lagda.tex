@@ -34,6 +34,8 @@
 
 \title{Toward Verified Library-Level Choreographic Programming with Algebraic Effects}
 
+\lk{I think we'll need to trim this abstract down.  I'll take a stab at that.}
+
 \begin{abstract}
   Choreographic programming (CP) is a paradigm for programming distributed applications that run on multiple nodes.
   %
@@ -49,7 +51,7 @@
 
   We propose building a verified library-level CP language using algebraic effects.
   %
-  Algebraic effects provide an abstraction that generalizes previous approaches.
+  Algebraic effects provide an abstraction that generalizes previous approaches. \lk{to library-level CP...which ones?}
   %
   They allow us to define choreographies as computations with user-defined effects and EPP as location-specific effect handlers, all at the library level.
   %
@@ -57,7 +59,7 @@
   %
   They provide abstract syntax trees for choreographies where CP-specific effects and control flows are manifest, enabling reasoning about them.
   %
-  Given that algebraic effects are going mainstream, with efficient implementations, we believe our approach would make library-level CP less ad-hoc and bring it to an even broader audience.
+  Given that algebraic effects are ``going mainstream'' \lk{cite the Dagstuhl report!}, with efficient implementations, we believe our approach would make library-level CP less ad-hoc and bring it to an even broader audience.
 
   We carry out our verified implementation in the proof assistant Agda and extract a Haskell implementation.
   %
@@ -68,6 +70,7 @@
   In particular, we show how to define choreographies and EPP with algebraic effects in Agda.
   %
   In the end, we state the correctness condition for EPP and some next steps.
+  \lk{add pointers to following sections}
 
   \lk{We should say ``mechanically verified'' to distinguish from e.g., the deadlock-freedom-by-design paper, where they have proofs of deadlock freedom, etc, but not mechanized ones.}
 \end{abstract}
