@@ -1,6 +1,22 @@
 \section{Choreographic Programming with Algebraic Effects}
 
 In this section, we use the algebraic effects framework from previous section to implement a CP language.
+%
+Our CP language is simplified and only contains local computations and communication.
+%
+We start by defining processes~(\Cref{sec:process}), which are the results of endpoint projection.
+%
+Then, we move on to defining choreographies~(\Cref{sec:choreo}).
+%
+Unlike previous library-level CP languages, our choreographies abstract over a particular representation of located values, allowing us to erase them and avoid non-totality.
+%
+Finally, we define endpoint projection as location-specific effect handlers for choreographies~(\Cref{sec:epp}).
+
+We assume a local language of signature 𝕃 that each node uses for local computations, and we parameterize our CP language by it.
+%
+We use locations Loc to refer to nodes in a distributed application and define them as Strings.
+%
+However, any data type with decidable equality would suffice.
 
 \begin{code}[hide]
 open import 02-algeff hiding (return; _>>=_)
@@ -16,6 +32,8 @@ open import Relation.Nullary using (Dec; yes; no)
 
 open RawMonad ⦃...⦄
 
+infix 20 _▷_
+infix 20 _⇒_◇_
 Loc : Set
 Loc = String
 
@@ -30,13 +48,17 @@ record ⊤ {ℓ : Level} : Set ℓ where
 \end{code}
 
 \subsection{Processes}
+\label{sec:process}
 
 \begin{code}[hide]
 -- a seperate modules avoid name conflicts
 module Process where
 \end{code}
 
-\begin{code}
+\begin{figure}[ht]
+
+\begin{minipage}{.45\textwidth}
+  \begin{center}\begin{code}
   data Op : Set₁ where
     `locally : ∀ {A} → Term 𝕃 A → Op
     `send    : ∀ {A : Set} → Loc → A → Op
@@ -49,58 +71,202 @@ module Process where
 
   ℙ : Sig
   ℙ = Op ◁ Arity
-
+  \end{code}\end{center}
+\end{minipage}
+\hfill\vline\hfill
+\begin{minipage}{.45\textwidth}
+  \begin{center}\begin{code}
   Process : Set → Set₁
   Process A = Term ℙ A
-\end{code}  
 
-\subsection{Choreography}
+  locally : ∀ {A} → Term 𝕃 A → Process A
+  locally t = perform (`locally t)
 
-\begin{code}
+  send : ∀ {A} → Loc → A → Process ⊤
+  send l a = perform (`send l a)
+
+  recv : ∀ {A} → Loc → Process A
+  recv {A} l = perform (`recv {A} l)
+  \end{code}\end{center}
+\end{minipage}
+
+\caption{Processes as Algebraic Effects}
+\label{fig:process}
+\end{figure}
+
+\Cref{fig:process} presents processes as algebraic effects.
+%
+Signature ℙ specifies the three operations of processes and their arity:
+%
+\begin{itemize}
+\item
+  `locally performs a local computation of type Term 𝕃 A and returns a value of type A.
+\item
+  `send sends a message of type A to a location and returns a unit.
+\item
+  `recv receives a message from a location and returns a value of type A.
+  %
+  Here, the performer of the `recv needs to specify what type of value it is expected to receive.
+\end{itemize}
+%
+We also define Process as a shorthand for terms using operations from ℙ and some other help functions.
+\subsection{Choreographies}
+\label{sec:choreo}
+
+\begin{figure}[ht]
+
+\begin{minipage}{.45\textwidth}
+  \begin{center}\begin{code}
 At : Setω
 At = ∀ {ℓ} → Set ℓ → Loc → Set ℓ
-\end{code}
 
-\begin{code}
+focus : Loc → At
+focus l A s with l ≟ s
+... | yes _  = A
+... | no  _  = ⊤
+
 module _ (_＠_ : At) where
 
   data Op : Set₁ where
-    `comm : ∀ {A} (s r : Loc) → (Term 𝕃 A) ＠ s → Op
+    `comm :  ∀ {A} (s r : Loc) →
+             (Term 𝕃 A) ＠ s → Op
 
   Arity : Op → Set _
   Arity (`comm {A} _ r _) = A ＠ r
 
   ℂ : Sig
   ℂ = Op ◁ Arity
-
+  -- the module ends here
+  \end{code}\end{center}
+\end{minipage}
+\hfill\vline\hfill
+\begin{minipage}{.45\textwidth}
+  \begin{center}\begin{code}
 Choreo : (At → Set) → Setω
-Choreo F = ∀ {_＠_ : At} → Term (ℂ _＠_) (F _＠_)
+Choreo F =
+  ∀ {_＠_ : At}
+  {{_ : ∀ {ℓ} {l} → RawMonad {ℓ} (_＠ l)}} →
+  Term (ℂ _＠_) (F _＠_)
+
+_▷_ :  ∀ {_＠_ : At} {A} →
+       (s : Loc) → (Term 𝕃 A) ＠ s →
+       Term (ℂ _＠_) (A ＠ s)
+s ▷ t = perform (`comm s s t)
+
+_⇒_◇_ :  ∀ {_＠_ : At} {A} →
+         (s r : Loc) → (Term 𝕃 A) ＠ s →
+         Term (ℂ _＠_) (A ＠ r)
+s ⇒ r ◇ t = perform (`comm s r t)
+  \end{code}\end{center}
+\end{minipage}
+
+\begin{code}[hide]
+id-monad : ∀ {ℓ} → RawMonad {ℓ} (λ A → A)
+id-monad = mkRawMonad _ (λ x → x) (λ x f → f x)
+
+top-monad : ∀ {ℓ ℓ′} → RawMonad {ℓ} {ℓ′} (λ A → ⊤)
+top-monad = mkRawMonad _ (λ _ → tt) (λ _ _ → tt)
+
+instance
+  focus-monad : ∀ {ℓ} {l s} → RawMonad {ℓ} (λ A → focus l A s)
+  focus-monad {l = l} {s = s} with l ≟ s
+  ... | yes _ = id-monad
+  ... | no  _ = top-monad
 \end{code}
 
-\subsection{Endpoint Projection}
+\caption{Choreographies as Algebraic Effects}
+\label{fig:choreo}
+\end{figure}
+
+\Cref{fig:choreo} presents choreographies as algebraic effects.
+%
+One issue that every library-level CP language needs to deal with is how to represent located values.
+%
+Located values are variables in a choreography that denote values at different locations.
+%
+We give them types $A \ @ \ l$, which intuitively means a value of type $A$ at location $l$.
+%
+Previous library-level CP languages often define located values as a union of a plain value and a unit --- an option type --- and have the unspoken invariant that when projecting to location $l$, values at $l$ are a plain value; otherwise, a unit.
+%
+These languages internally use an unwrap function to extract the plain value from the union.
+%
+However, the unwrap function is very non-total because the union could be a unit, but these languages meticulously use it only in situations where the union is a plain value (implicitly use the invariant), so the non-totality never shows up.
+%
+This approach does not work in Agda as it demands the totality of every function.
+
+For this reason, we take an alternative approach to located values where they are kept abstract and erased before projection in a way that respects the invariant by construction.
+%
+We first define At, a type-level function that captures the interface of located values.
+%
+Then, we define focus, a particular At that we will use in endpoint projection (we will show another At in the next section).
+%
+Intuitively, focus $l$ erases a located value of type $A \ @ \ s$ to $A$ if $l$ is equal to $s$; otherwise, to a unit.
+
+The signature ℂ specifies the two main opeartions of choreographies using one overloaded constructor:
+%
+\begin{itemize}
+\item
+  `comm s s t denotes a local computation t at location l.
+\item
+  `comm s r t denotes locaton l sends the result of a computation t to location r.
+\end{itemize}
+
+We also define Choreo as a shorthand for terms using operations from ℂ abstracted over a particular At.
+%
+Note that we also require the At to be an instance of monads for any location $l$, which allows us to chain together located values.
+%
+Our focus is a monad because the identity functor and units are both monads.
+%
+We also two helpful functions for writing choreographies:
+%
+\begin{itemize}
+\item
+\item
+\end{itemize}
+
+\noindent \textbf{An Example.}
+
+\subsection{Endpoint Projection} \label{sec:epp}
 
 \begin{code}[hide]
 open Process
 \end{code}
 
+\begin{figure}[ht]
 \begin{code}
-focus : Loc → At
-focus l A s with l ≟ s
-... | yes _ = A
-... | no  _ = ⊤
-
-global : At
-global A _ = A
-
-epp : ∀ {F : At → Set} → Choreo F → (l : Loc) → Process (F (focus l))
+epp : ∀ {F} → Choreo F → (l : Loc) → Process (F (focus l))
 epp c l = interp alg return c
   where
-  alg : ∀ {A} → (ℂ (focus l)) -Alg[ Term ℙ A ]
-  alg (`comm s r a , k) with l ≟ s | l ≟ r
-  ... | yes _ | yes _ = perform (`locally a) >>= k
-  ... | yes _ | no  _ = perform (`locally a) >>= (λ x → perform (`send r x)) >> k tt
-  ... | no  _ | yes _ = perform (`recv s) >>= k
-  ... | no  _ | no  _ = k tt
+    alg : ∀ {A} → ℂ (focus l) -Alg[ Process A ]
+    alg (`comm s r a , k) with l ≟ s | l ≟ r
+    ... | yes _  | yes _  = locally a >>= k
+    ... | yes _  | no  _  = locally a >>= (λ x → send r x) >> k tt
+    ... | no  _  | yes _  = recv s >>= k
+    ... | no  _  | no  _  = k tt
 \end{code}
+\caption{Endpoint Projection}
+\label{fig:epp}
+\end{figure}
 
-\subsection{An Example}
+We are now ready to define endpoint projection, the process of turning a choreography into a process for a target location.
+%
+\Cref{fig:epp} presents our implementation of EPP.
+%
+The function \AgdaFunction{epp} takes a choreography $c$, a target location $l$, and uses the effect handler \AgdaFunction{interp} to interpret operations in $c$.
+%
+For variables, we return them in the generated process.
+%
+For operations, we construct a \AgdaFunction{ℂ}-Algebra (with all located values erased to $l$'s perspective) \AgdaFunction{alg} on processes, that does one step of interpretation.
+%
+The only operation we need to interpret is \AgdaInductiveConstructor{`comm}, depending on if $l$ is equal to $s$ and $r$:
+%
+\begin{itemize}
+\item
+  If $l$ equals $s$ and $r$, meaning $s$ and $r$ are the same, we interpret this operation as a local computation followed by the continuation.
+\item
+  If $l$ equals $s$ but not $r$, meaning the target location is the sender, we interpret the operation as a local computation followed by a send and the continuation.
+\item
+  If $l$ equals $r$ but not $s$, meaning the target location is the receier, we interpret the operation as a receive followed by the continuation.
+\item
+  If $l$ equals neither $s$ nor $r$, meaning the target location is not involved, we just return the continuation.
+\end{itemize}
