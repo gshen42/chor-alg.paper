@@ -16,7 +16,11 @@ For example, one can implement a distributed pipeline that utilizes the processi
   \end{split}
 \end{equation*}
 %
-Here, we use $\leftarrow$ for variable bindings, $\locally{\_}{\_}$ for node-local computations, $\comm{\_}{\_}{\_}$ for communication between nodes.
+Here, we use $\leftarrow$ for variable bindings;
+%
+$\locally{A}{\mathsf{t}}$ denotes a local computation $\mathsf{t}$ at $A$;
+%
+$\comm{A}{B}{\mathsf{t}}$ denotes communication from $A$ to $B$ with message $\mathsf{t}$.
 %
 In this choreography, A first gets some input locally, then passes it around to B and C, with each node calling its process function on the data.
 %
@@ -54,35 +58,45 @@ To get the deployable implementation for each node, we can apply endpoint projec
   \end{equation*}
 \end{minipage}
 \]
-
+%
 A correct CP language guarantees soundness and completeness of EPP, which further implies that the resulting programs are deadlock-free when running together.
 %
-Previous work has been done on formalizing a core CP calculus and proving its correctness~\citep{cruzfilipe-2020, cruzfilipe-2022, hirsch-2022}.
+Prior work has been done on formalizing a core CP calculus and proving its correctness~\citep{cruzfilipe-2020, cruzfilipe-2022, hirsch-2022}.
 %
-With these theoretical foundations, people have been building practical CP languages in the form of a custom compiler for Java~\citep{giallorenzo-2024} and libraries for Haskell~\citep{shen-2023} and Rust~\citep{kashiwa-2023}, and use them to build real-world distributed applications~\citep{lugovic-2023}.
+Built on top of these theoretical foundations, several standalone CP languages have emerged~\citep{giallorenzo-2024}, some of them are even verified by a formal reasoning system~\citep{pohjola-2022, cruzfillipe-2023}.
+%
+And people have been using them to build real-world distributed applications~\citep{lugovic-2023}.
 
-Sadly, we usually don't have proofs of correctness and practical implementations at the same time.
+However, these standalone CP languages are not widely applicable as they do not integrate well with existing language infrastructures.
 %
-Proofs are for high-level calculi that are distant from how people write code, and implementations don't have any formal guarantee of the programs they generate.
+They typically build a separate compiler on top of an existing language --- which is already a significant amount of work -- and have limited tooling and IDE support.
 %
-Recent efforts have been made to use a formal reasoning system to define and prove the correctness of CP and then extract a verified implementation~\citep{pohjola-2022, cruzfillipe-2023}.
-%
-However, these verified implementations fall short of being widely applicable because they often define a standalone language for CP, making it hard to integrate with existing language infrastructures.
-%
-In particular, these verified implementations define a deep embedding of CP in the host language with variables being in a separate semantic category, making it hard to apply normal host language functions on them without complicated marshalling and unmarshalling (\gs{Is this clear enough? I could go deeper into how their approach sucks, but not sure if it's worth the space.}).
-%
-On the other hand, a shallow embedding approach would not suffice either because proofs need access to the abstract syntax trees to reason about them.
+Also, sometimes they have to reinvent the wheels to implement features like polymorphism, higher-order functions, and asynchrony that is already in the existing language.
 
-To that end, we propose using a \emph{mixed embedding} approach to build a verified CP language in proof assistant Agda.
+Recent efforts have been spent on developing \emph{library-level} CP languages~\citep{shen-2023, kashiwa-2023}.
 %
-Our mixed embedding utilizes algebraic effects to represent CP with CP-specific effects and control flows deeply embedded --- enalbing reasoning about them --- pure computations and variable bindings shallowly embedded --- enabling seamless integration with the host language.
+In these languages, choreographies and EPP are completely expressed as constructs in the host language.
 %
-The resulting implementation can be easily either extracted from Agda or ported to a different language that supports algebraic effects without many changes.
-%
-Given that more and more languages are adapting algebraic effects as an abstraction for user-defined effects and some even support efficient complilation of them with performance on par with native code, we believe this approach can bring CP to a broader audience with greater confidence in its correctness.
+However, they lack a solid theoretical foundation, especially a formal proof of correctness.
 
-In this paper, we outline our plan for building a verified CP language with algebraic effects.
+To this end, we propose building a verified library-level CP language using algebraic effects~\citep{plotkin-2003, plotkin-2013}.
 %
-In particular, we show how to define choreographies as computations with uninterpreted effects and EPP as giving location-varying interpretations to those effects.
+Algebraic effects provide an abstraction that generalizes previous approaches.
 %
-We state the correctness condition for EPP in the end.
+They allow us to define choreographies as computations with user-defined effects and EPP as location-specific effect handlers, all at the library level.
+%
+Algebraic effects also lend themselves to proofs of correctness.
+%
+They provide abstract syntax trees for choreographies where CP-specific effects and control flows are manifest, enabling reasoning about them.
+%
+Given that algebraic effects are going mainstream, with efficient implementations, we believe our approach would make library-level CP less ad-hoc and bring it to an even broader audience.
+
+We carry out our verified implementation in the proof assistant Agda and extract a Haskell implementation.
+%
+The same approach can be easily ported to a different language that supports algebraic effects with confidence in its correctness, given that a model of it has been verified.
+
+In this paper, we outline our plan for building a verified library-level CP language with algebraic effects.
+%
+In particular, we show how to define choreographies and EPP with algebraic effects in Agda.
+%
+In the end, we state the correctness condition for EPP and some next steps.
