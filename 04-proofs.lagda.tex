@@ -25,6 +25,9 @@ open import 02-algeff
 
 module 04-proofs (𝕃 : Sig) where
 
+open import Effect.Monad using (RawMonad)
+open import Level using (Level)
+
 import 03-choreo
 open module 03-choreo′ = 03-choreo 𝕃
 open 03-choreo′.Process
@@ -37,12 +40,20 @@ We first define operational semantics for choreographies and networks.
 The operational sematnics for choreographies treats all located values as normal values and has the following definition:
 %
 \begin{center}\begin{code}
-noAt : At
-noAt A _ = A
+opaque
+  noAt : At
+  noAt A _ = A
 
 data _⇒ᶜ_ {A : Set} : Term (ℂ noAt) A → Term (ℂ noAt) A → Set where
 -- work in progress
 \end{code}\end{center}
+\begin{code}[hide]
+instance
+  opaque
+    unfolding noAt
+    noAt-monad : ∀ {ℓ} {l} → RawMonad {ℓ} (λ A → noAt A l)
+    noAt-monad = mkRawMonad _ (λ x → x) (λ x f → f x)
+\end{code}
 %
 A network is a mapping from locations to processes, and a partially applied EPP interprets a choreography as a network.
 %
