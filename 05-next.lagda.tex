@@ -1,6 +1,21 @@
 \section{Next Steps}
 
-\lk{What are our next steps?
-- Actually prove soundness and completeness. We think that (strong) bisimulation is probably too strong; for one thing, if EPP does any optimizations, then the EPP'd choreography may not take transitions in lockstep with the original.  For another thing, if we are using a realistic network semantics that accounts for asynchrony, etc., then that will also affect the behavior of the EPP'd choreography.  A weak bisimulation is probably more appropriate.  These considerations aren't specific to the library-level CP setting, but we care about them.
-- Implement a CP framework based on our approach in a language with native support for algebraic effects, like OCaml or Koka.
-}
+In this section, we outline some potential next steps.
+
+\subsection{Finish the Proofs and Consider Common Extensions}
+
+We need to finish the correctness proofs and consider common extensions like conditionals and recursions (which might require a coinductive variant of \textit{Term}).
+
+\subsection{Liberate EPP and Relax the Correctness Condition}
+
+Being at the library-level means that user can write their own version of EPP easily.
+%
+These EPPs might do various kinds of optimization or adapt to a customized communication pattern, which do not necessarily preserve or reflect the semantics of the original choreography.
+%
+The standard correctness condition asks for a strong bisimulation, meaning the two systems have the same \emph{behavior}.
+%
+Maybe the two systems compute the same value, or simply the resulting network being deadlock-free is enough
+
+\subsection{More Implementations}
+
+Bring the idea to more languages, especially languages with native support of algebraic effects.
