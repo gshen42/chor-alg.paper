@@ -2,7 +2,9 @@
 
 In this section, we define a minimal algebraic effects framework in Agda, which we will use to implement CP in the next section.
 %
-No prior knowledge of algebraic effects is assumed, with each concept first introduced from a mathematical perspective and then related to programming.
+No prior knowledge of algebraic effects is assumed.
+%
+We introduce each concept first from a mathematical perspective and then related to programming.
 %
 Due to lack of space, we do not include any examples in this section, but the next section can be seen as a demonstration of the framework.
 %
@@ -56,7 +58,7 @@ module _ where
 
 \subsection{Signatures and Algebras}
 
-A signature \textit{Sig} specifies the equipped operations of an algebra, which includes a type \textit{Op} of operations and a function \textit{Arity} giving the number of arguments (represented as the cardinality of a type) of each operation:
+A signature \AgdaRecord{Sig} specifies the equipped operations of an algebra, which includes a type \AgdaField{Op} of operations and a function \AgdaField{Arity} giving the number of arguments (represented as the cardinality of a type) of each operation:
 %
 \begin{center}\begin{code}
 record Sig : Set₂ where
@@ -70,15 +72,17 @@ record Sig : Set₂ where
 open Sig
 \end{code}
 %
-Agda uses an infinite hierarchy of universes where $\mathit{Set} : \mathit{Set}_1 : ... : \mathit{Set}_n : \mathit{Set_{n+1}}$ to avoid paradoxes.
+Agda uses an infinite hierarchy of universes where $\AgdaPrimitive{Set} : \AgdaPrimitive{Set}_1 : ... : \AgdaPrimitive{Set}_n : \AgdaPrimitive{Set}_{n+1}$ to avoid paradoxes.
 %
-For ease of presentation in this paper, we overconstrain the universe of \textit{Op} to be $\mathit{Set}_1$ (similarily for \textit{Arity}).
+For ease of presentation in this paper, we overconstrain the universe of \AgdaField{Op} to be \AgdaPrimitive{Set₁} (similarily for \AgdaField{Arity}).
 %
-The actual code is universe polymorphic and generic over universe levels.
+The actual implementation is universe polymorphic.
 %
 It is recommended to ignore the different universes and treat them all as \textit{Set} as they do not contribute to the key point of the paper.
 
-While a signature $\mathbb{F}$ merely specifies the interface of an algebra, we say a carrier set $X$ implements such an algebra, written as $\mathbb{F}$-\textit{Alg}[$X$], if there is a function of type $\llbracket \mathbb{F} \rrbracket \ X \rightarrow X$:
+A set $X$ that implements the operations of a signature $\mathbb{F}$ is called an $\mathbb{F}$-algebra.
+%
+An $\mathbb{F}$-algebra on the carrier set $X$, written as $\mathbb{F}$ \AgdaFunction{-Alg[} $X$ \AgdaFunction{]} in Agda, is a function of type \AgdaFunction{⟦} 𝔽 \AgdaFunction{⟧} $X \rightarrow X$:
 %
 \[
 \begin{minipage}{.5\textwidth}
@@ -96,17 +100,17 @@ _-Alg[_] : Sig → Set₁ → Set₁
 \end{minipage}
 \]
 %
-$\llbracket \mathbb{F} \rrbracket \ X$ denotes an operations paired with its arity number of elements from the carrier set --- a fully applied operation.
+\AgdaFunction{⟦} 𝔽 \AgdaFunction{⟧} $X$ denotes an operation paired with its arity number of elements from the carrier set --- a fully applied operation.
 %
-$\llbracket \mathbb{F} \rrbracket \ X \rightarrow X$ allows us to make a new element out of a fully applied operation, the very nature of an algebra.
+\AgdaFunction{⟦} 𝔽 \AgdaFunction{⟧} $X \rightarrow X$ allows us to make a new element out of a fully applied operation, the very nature of an algebra.
 
-In programming, we can regard that a kind of effectful computation gives rise to an algebra with the allowed effects being the signature, the return value of an effect being the arity of the operation, and a carrier set of such an algebra a functional model of the effectful computation.
+In programming, we can regard that a kind of effectful computation gives rise to an algebra with the allowed effects being the signature, the result of an effect being the arity of the operation, and a carrier set of such an algebra being a functional model of the effectful computation.
 
 \subsection{The Free Algebra}
 
 Among all the algebras of a signature $\mathbb{F}$, we are particularly interested in one called the \emph{free algebra}.
 %
-Rather than performing the operations in the carrier set, the free algebra merely records them as a data type, which we call \textit{Term}:
+Rather than performing operations in the carrier set, the free algebra merely records them as a data type, which we call terms:
 %
 \begin{center}\begin{code}
 data Term (𝔽 : Sig) (A : Set) : Set₁ where
@@ -114,30 +118,32 @@ data Term (𝔽 : Sig) (A : Set) : Set₁ where
   op : ⟦ 𝔽 ⟧ (Term 𝔽 A) → Term 𝔽 A
 \end{code}\end{center}
 %
-A term is either a variable drawn from some set $A$ or a fully applied operation to some other terms.
+The \AgdaInductiveConstructor{var} constructor denotes a variable drawn from some set $A$.
 %
-One of the reasons why \textit{Term} is called the free algebra is because it is an algebra for any signature $\mathbb{F}$:
+The \AgdaInductiveConstructor{op} constructor denotes a fully applied operation to some other terms.
 %
-\begin{center}\begin{code}
-term-alg : ∀ {𝔽} {A} → 𝔽 -Alg[ Term 𝔽 A ]
-term-alg = op
-\end{code}\end{center}
-%
+%% One of the reasons why \textit{Term} is called the free algebra is because it is an algebra for any signature $\mathbb{F}$:
+%% %
+%% \begin{center}\begin{code}
+%% term-alg : ∀ {𝔽} {A} → 𝔽 -Alg[ Term 𝔽 A ]
+%% term-alg = op
+%% \end{code}\end{center}
+%% %
 
-In programming, terms correspond to programs where effects are left uninterpreted, with variables being pure computations and operations being effectful computations.
+In programming, \AgdaDatatype{Term}s correspond to programs where effects are left uninterpreted, with variables being pure computations and operations being effectful computations.
 %
-Terms also form a monad (it is actually the free monad), which allows us to chain them together:
+\AgdaDatatype{Term}s also form a monad (it is actually the free monad), which allows us to chain them together:
 %
 \begin{center}\begin{code}
 return : ∀ {𝔽} {A} → A → Term 𝔽 A
 return = var
 
 _>>=_ : ∀ {𝔽} {A B} → Term 𝔽 A → (A → Term 𝔽 B) → Term 𝔽 B
-var x      >>= f = f x
-op (o , k) >>= f = op (o , _>>= f ∘ k)
+var x       >>= f =  f x
+op (o , k)  >>= f =  op (o , _>>= f ∘ k)
 \end{code}\end{center}
 %
-We also provide another helper function for terms which, in combination with the monad interface, allows us to write programs:
+We also provide a helper function that constructs a term that performs an operation and immediately returns its result:
 %
 \begin{center}\begin{code}
 perform : ∀ {𝔽} (o : Op 𝔽) → Term 𝔽 (Arity 𝔽 o)
@@ -152,12 +158,20 @@ instance
 
 \subsection{Effect Handlers}
 
-Another reason why \textit{Term} is called the free algebra is that given another $\mathbb{F}$-Algebra $X$, and substitution of the variable from $X$, we can interpret a term as an element of $X$:
+One of the reasons why terms are called free algebra is that they are freely interpretable.
+%
+Given another $\mathbb{F}$-algebra $X$, a substuition of variables from $X$, we can interpret a term as an element of $X$:
 %
 \begin{center}\begin{code}
 interp : ∀ {𝔽} {X A} → 𝔽 -Alg[ X ] → (A → X) → Term 𝔽 A → X
-interp alg f (var x)      = f x
-interp alg f (op (o , k)) = alg (o , interp alg f ∘ k)
+interp alg f (var x)       = f x
+interp alg f (op (o , k))  = alg (o , interp alg f ∘ k)
 \end{code}\end{center}
+%
+For variables, \AgdaFunction{interp} uses the substitution $f$ to map them to $X$.
+%
+For operations, \AgdaFunction{interp} first recursively interprets the arguments and then uses ${alg}$ to make a new element of $X$ from a fully applied operation.
 
-In programming, the \textit{interp} function corresponds to effect handlers.
+In programming, \AgdaFunction{interp} forms the foundations of effect handlers.
+%
+It allows us to systematically handle uninterpreted effects of a computation.
