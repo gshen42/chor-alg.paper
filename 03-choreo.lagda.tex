@@ -100,16 +100,16 @@ Signature ℙ specifies the three operations of processes and their arity:
 %
 \begin{itemize}
 \item
-  `locally performs a local computation of type Term 𝕃 A and returns a value of type A.
+  \AgdaInductiveConstructor{`locally} performs a local computation of type \AgdaDatatype{Term} 𝕃 $A$ and returns a value of type $A$.
 \item
-  `send sends a message of type A to a location and returns a unit.
+  \AgdaInductiveConstructor{`send} sends a message of type $A$ to a location and returns a unit.
 \item
-  `recv receives a message from a location and returns a value of type A.
+  \AgdaInductiveConstructor{`recv} receives a message from a location and returns a value of type $A$.
   %
-  Here, the performer of the `recv needs to specify what type of value it is expected to receive.
+  Here, the performer of the \AgdaInductiveConstructor{`recv} needs to specify what type of value it is expected to receive.
 \end{itemize}
 %
-We also define Process as a shorthand for terms using operations from ℙ and some other help functions.
+We also define \AgdaDatatype{Process} as a shorthand for terms using operations from ℙ and some other help functions.
 \subsection{Choreographies}
 \label{sec:choreo}
 
@@ -196,35 +196,28 @@ This approach does not work in Agda as it demands the totality of every function
 
 For this reason, we take an alternative approach to located values where they are kept abstract and erased before projection in a way that respects the invariant by construction.
 %
-We first define At, a type-level function that captures the interface of located values.
+We first define \AgdaFunction{At}, a type-level function that captures the interface of located values.
 %
-Then, we define focus, a particular At that we will use in endpoint projection (we will show another At in the next section).
+Then, we define \AgdaFunction{focus}, a particular At that we will use in endpoint projection (we will show another \AgdaFunction{At} in the next section).
 %
-Intuitively, focus $l$ erases a located value of type $A \ @ \ s$ to $A$ if $l$ is equal to $s$; otherwise, to a unit.
+Intuitively, \AgdaFunction{focus} $l$ erases a located value of type $A \ @ \ s$ to $A$ if $l$ is equal to $s$; otherwise, to a unit.
 
 The signature ℂ specifies the two main opeartions of choreographies using one overloaded constructor:
 %
 \begin{itemize}
 \item
-  `comm s s t denotes a local computation t at location l.
+  \AgdaInductiveConstructor{`comm} $s$ $s$ $t$ denotes a local computation $t$ at location $l$.
 \item
-  `comm s r t denotes locaton l sends the result of a computation t to location r.
+  \AgdaInductiveConstructor{`comm} $s$ $r$ $t$ denotes location $l$ sends the result of a computation $t$ to location $r$.
 \end{itemize}
 
-We also define Choreo as a shorthand for terms using operations from ℂ abstracted over a particular At.
+We also define \AgdaFunction{Choreo} as a shorthand for terms using operations from ℂ abstracted over a particular \AgdaFunction{At}.
 %
-Note that we also require the At to be an instance of monads for any location $l$, which allows us to chain together located values.
+Note that we also require the \AgdaFunction{At} to be an instance of monads for any location $l$, which allows us to chain together located values.
 %
 Our focus is a monad because the identity functor and units are both monads.
 %
-We also two helpful functions for writing choreographies:
-%
-\begin{itemize}
-\item
-\item
-\end{itemize}
-
-\noindent \textbf{An Example.}
+We also define two helpful functions for writing choreographies.
 
 \subsection{Endpoint Projection} \label{sec:epp}
 
