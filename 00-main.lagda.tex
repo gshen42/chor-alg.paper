@@ -1,10 +1,11 @@
 \documentclass[acmsmall, screen, review, anonymous, authorversion, nonacm]{acmart}
 
-\usepackage{agda}
+\usepackage[references]{agda}
 \usepackage{xcolor}
 \usepackage{cleveref}
 \usepackage{stmaryrd}
 
+\setcitestyle{nosort}
 \citestyle{acmauthoryear}
 
 \usepackage{newunicodechar}
@@ -15,8 +16,8 @@
 \newunicodechar{＠}{\ensuremath{@}}
 \newunicodechar{≟}{\ensuremath{=^?}}
 
-\newcommand{\locally}[2]{\ensuremath{#1 \mathbin{\color{orange}\rhd} #2}}
-\newcommand{\comm}[3]{\ensuremath{#1 \mathbin{\color{orange}\Rightarrow} #2 \mathbin{\color{orange}\square} #3}}
+\newcommand{\locally}[2]{\ensuremath{\mathrm{#1} \mathbin{\color{orange}\rhd} \mathrm{#2}}}
+\newcommand{\comm}[3]{\ensuremath{\mathrm{#1} \mathbin{\color{orange}\Rightarrow} \mathrm{#2} \mathbin{\color{orange}\square} \mathrm{#3}}}
 
 % editing comments; can be programmatically removed later
 \iftrue % use \iftrue / \iffalse to turn on/off comments
@@ -35,43 +36,20 @@
 \title{Toward Verified Library-Level Choreographic Programming with Algebraic Effects}
 
 \begin{abstract}
-  \lk{I think we'll need to trim this abstract down.  I'll take a stab at that.}
-  Choreographic programming (CP) is a paradigm for programming distributed applications that run on multiple nodes.
+  Choreographic programming (CP) is a paradigm for programming distributed applications
+  as single, unified programs, called \emph{choreographies}, that are then compiled to node-local programs via \emph{endpoint projection} (EPP).
   %
-  In CP, instead of implementing individual programs for each node, the programmer writes one, unified program, called a \emph{choreography}, that is then compiled to individual programs for each node via a step called \emph{endpoint projection} (EPP).
+  Recently, \emph{library-level} CP frameworks have emerged, in which choreographies and EPP are expressed as constructs in an existing host language.
   %
-  A correct CP language guarantees soundness and completeness of EPP, which further implies that the resulting programs are deadlock-free when running together.
-  %
-  Standalone CP languages have existed for a while, but they are not widely applicable as they do not integrate well with existing language infrastructures.
-  %
-  Recent efforts have been spent on developing \emph{library-level} CP languages where choreographies and EPP are completely expressed as constructs in a host language.
-  %
-  However, they lack a solid theoretical foundation, especially a formal proof of correctness.
+  So far, however, library-level CP lacks a solid theoretical foundation.
 
-  We propose building a verified library-level CP language using algebraic effects.
+  In this paper, we propose modeling library-level CP using \emph{algebraic effects}, an abstraction that generalizes the approach taken by existing CP libraries.
   %
-  Algebraic effects provide an abstraction that generalizes previous approaches. \lk{to library-level CP...which ones?}
+  Algebraic effects let us define choreographies as computations with user-defined effects and EPP as location-specific effect handlers.
   %
-  They allow us to define choreographies as computations with user-defined effects and EPP as location-specific effect handlers, all at the library level.
+  Algebraic effects also lend themselves to reasoning about correctness properties, such as soundness and completeness of EPP.
   %
-  Algebraic effects also lend themselves to proofs of correctness.
-  %
-  They provide abstract syntax trees for choreographies where CP-specific effects and control flows are manifest, enabling reasoning about them.
-  %
-  Given that algebraic effects are ``going mainstream'' \lk{cite the Dagstuhl report!}, with efficient implementations, we believe our approach would make library-level CP less ad-hoc and bring it to an even broader audience.
-
-  We carry out our verified implementation in the proof assistant Agda and extract a Haskell implementation.
-  %
-  The same approach can be easily ported to a different language that supports algebraic effects with confidence in its correctness, given that a model of it has been verified.
-
-  In this paper, we outline our plan for building a verified library-level CP language with algebraic effects.
-  %
-  In particular, we show how to define choreographies and EPP with algebraic effects in Agda.
-  %
-  In the end, we state the correctness condition for EPP and some next steps.
-  \lk{add pointers to following sections}
-
-  \lk{We should say ``mechanically verified'' to distinguish from e.g., the deadlock-freedom-by-design paper, where they have proofs of deadlock freedom, etc, but not mechanized ones.}
+  We present a prototype of a library-level CP framework based on algebraic effects, implemented in the Agda proof assistant, and discuss our ongoing work on leveraging the algebraic-effects-based approach to prove the correctness of our library-level CP implementation.
 \end{abstract}
 
 \begin{document}

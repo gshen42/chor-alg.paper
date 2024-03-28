@@ -2,40 +2,39 @@
 
 Choreographic programming~(CP)~\citep{montesi-2013, montesi-2023} is a paradigm for programming distributed applications that run on multiple nodes.
 %
-In CP, instead of programming each node separately, the programmer writes one, unified program, called a \emph{choreography}, that is then compiled to individual programs for each node via a compilation step called \emph{endpoint projection} (EPP).
+In CP the programmer writes one, unified program, called a \emph{choreography}, that is then compiled to individual programs for each node via a compilation step called \emph{endpoint projection} (EPP).
 %
-For example, one can implement a distributed pipeline that utilizes the processing power of nodes A, B, and C as a choreography:
+For example, the following choreography describes a distributed data processing pipeline, involving nodes Alice, Bob, and Carol, which respectively run functions $\mathsf{f}$, $\mathsf{g}$, and $\mathsf{h}$ on their input:
 %
 \begin{equation*}
   \begin{split}
-    x \leftarrow \; & \locally{A}{\mathsf{getInput}} \\
-    y \leftarrow \; & \comm{A}{B}{\mathsf{process}_A(x)} \\
-    z \leftarrow \; & \comm{B}{C}{\mathsf{process}_B(y)} \\
-    w \leftarrow \; & \comm{C}{A}{\mathsf{process}_C(z)} \\
-                    & \locally{A}{\mathsf{showResults}(w)} \\
+    x \leftarrow \; & \locally{Alice}{\mathsf{getInput}} \\
+    y \leftarrow \; & \comm{Alice}{Bob}{\mathsf{f}(x)} \\
+    z \leftarrow \; & \comm{Bob}{Carol}{\mathsf{g}(y)} \\
+    w \leftarrow \; & \comm{Carol}{Alice}{\mathsf{h}(z)} \\
+                    & \locally{Alice}{\mathsf{showResults}(w)} \\
   \end{split}
 \end{equation*}
 %
 Here, we use $\leftarrow$ for variable bindings;
 %
-$\locally{A}{\mathsf{t}}$ denotes a local computation $\mathsf{t}$ at $A$;
+$\locally{Alice}{\mathsf{t}}$ denotes a local computation $\mathsf{t}$ at Alice;
 %
-$\comm{A}{B}{\mathsf{t}}$ denotes communication from $A$ to $B$ with message $\mathsf{t}$.
+and $\comm{Alice}{Bob}{\mathsf{t}}$ denotes communication from Alice to Bob with message $\mathsf{t}$.
 %
-In this choreography, A first gets some input locally, then passes it around to B and C, with each node calling its process function on the data.
+In this choreography, Alice first gets some input locally, processes it with $\mathsf{f}$, and passes the result to Bob, who processes it with $\mathsf{g}$ and passes the result to Carol, who processes it with $\mathsf{h}$ and passes it back to Alice to be displayed to the user.
 %
-The result is passed back to A and printed out.
+To get an executable program for each node, we can apply endpoint projection to the choreography, resulting in individual programs for Alice, Bob, and Carol:
 %
-To get the deployable implementation for each node, we can apply endpoint projection on the choreography, which generates the following individual programs for A, B, and C:
-%
+\hspace{-1cm}
 \[
-\begin{minipage}{.3\textwidth}
+\begin{minipage}{.35\textwidth}
   \begin{equation*}
     \begin{split}
       x \leftarrow \; & \mathsf{getInput} \\
-                      & \mathsf{send}(B, \mathsf{process}_A(x)) \\
-      w \leftarrow \; & \mathsf{recv}(C) \\
-                      & \mathsf{showResult}(w)
+                      & \mathsf{send}(Bob, \mathsf{f}(x)) \\
+      w \leftarrow \; & \mathsf{recv}(Carol) \\
+                      & \mathsf{showResults}(w)
     \end{split}
   \end{equation*}
 \end{minipage}
@@ -43,8 +42,8 @@ To get the deployable implementation for each node, we can apply endpoint projec
 \begin{minipage}{.3\textwidth}
   \begin{equation*}
     \begin{split}
-      y \leftarrow \; & \mathsf{recv}(A) \\
-                      & \mathsf{send}(C, \mathsf{process}_B(y)) \\
+      y \leftarrow \; & \mathsf{recv}(Alice) \\
+                      & \mathsf{send}(Carol, \mathsf{g}(y)) \\
     \end{split}
   \end{equation*}
 \end{minipage}
@@ -52,52 +51,52 @@ To get the deployable implementation for each node, we can apply endpoint projec
 \begin{minipage}{.3\textwidth}
   \begin{equation*}
     \begin{split}
-      z \leftarrow \; & \mathsf{recv}(B) \\
-                      & \mathsf{send}(A, \mathsf{process}_C(z)) \\
+      z \leftarrow \; & \mathsf{recv}(Bob) \\
+                      & \mathsf{send}(Alice, \mathsf{h}(z)) \\
     \end{split}
   \end{equation*}
 \end{minipage}
 \]
 %
-A correct CP language guarantees soundness and completeness of EPP, which further implies that the resulting programs are deadlock-free when running together.
+A correct CP language guarantees soundness and completeness of EPP, which further implies that the collection of projected programs is deadlock-free when running together.
 %
-Prior work has been done on formalizing a core CP calculus and proving its correctness~\citep{cruzfilipe-2020, cruzfilipe-2022, hirsch-2022}.
+Existing research places CP on a solid theoretical foundation~\citep{montesi-2013, cruzfilipe-2020, cruzfilipe-2022, hirsch-2022},
 %
-Built on top of these theoretical foundations, several standalone CP languages have emerged~\citep{giallorenzo-2024}, some of them are even verified by a formal reasoning system~\citep{pohjola-2022, cruzfillipe-2023}.
-%
-And people have been using them to build real-world distributed applications~\citep{lugovic-2023}.
+which has informed the design of practical, full-featured standalone CP languages such as Choral~\citep{giallorenzo-2024}.
 
-However, these standalone CP languages are not widely applicable as they do not integrate well with existing language infrastructures.
-%
-They typically build a separate compiler on top of an existing language --- which is already a significant amount of work -- and have limited tooling and IDE support.
-%
-Also, sometimes they have to reinvent the wheels to implement features like polymorphism, higher-order functions, and asynchrony that is already in the existing language.
+%some of them are even verified by a formal reasoning system~\citep{pohjola-2022, cruzfillipe-2023}.
+%And people have been using them to build real-world distributed applications~\citep{lugovic-2023}.
 
-Recent efforts have been spent on developing \emph{library-level} CP languages~\citep{shen-2023, kashiwa-2023}.
-%
-In these languages, choreographies and EPP are completely expressed as constructs in the host language.
-%
-However, they lack a solid theoretical foundation, especially a formal proof of correctness.
+%% However, these standalone CP languages are not widely applicable as they do not integrate well with existing language infrastructures.
+%% %
+%% They typically build a separate compiler on top of an existing language --- which is already a significant amount of work -- and have limited tooling and IDE support.
+%% %
+%% Also, sometimes they have to reinvent the wheels to implement features like polymorphism, higher-order functions, and asynchrony that is already in the existing language.
 
-To this end, we propose building a verified library-level CP language using algebraic effects~\citep{plotkin-2003, plotkin-2013}.
+Recent work has introduced \emph{library-level} CP languages~\citep{shen-2023, kashiwa-2023}, in which choreographies and EPP are completely expressed as constructs in an existing host language.  For example, HasChor~\citep{shen-2023}, implements support for CP by means of a domain-specific language embedded in Haskell.
+In HasChor, choreographies are monadic computations in which choreographic operators such as $\locally{}{}$ and $\comm{}{}{}$ may be used, and EPP is carried out by means of \emph{dynamic interpretation} of choreographies at run time.  The recently proposed ChoRus library for choreographic programming in Rust~\citep{kashiwa-2023} takes a similarly dynamic approach.
 %
-Algebraic effects provide an abstraction that generalizes previous approaches.
+Library-level CP frameworks have the potential to improve the accessibility and practicality of CP by integrating it into general-purpose programming languages.
 %
-They allow us to define choreographies as computations with user-defined effects and EPP as location-specific effect handlers, all at the library level.
+However, there are no proofs of correctness of EPP for library-level CP frameworks. Indeed, it is unclear to what extent the established theory of CP is applicable in the setting of library-level CP.
+
+To close this gap, in this paper we propose \emph{algebraic effects}~\citep{plotkin-2003, plotkin-2013} as a foundational approach for implementing and verifying library-level CP.
+%
+Algebraic effects provide an abstraction that generalizes existing approaches to library-level CP.
+%
+In particular, they allow us to define choreographies as computations with user-defined effects and EPP as location-specific effect handlers.
 %
 Algebraic effects also lend themselves to proofs of correctness.
 %
-They provide abstract syntax trees for choreographies where CP-specific effects and control flows are manifest, enabling reasoning about them.
+They provide abstract syntax trees for choreographies in which CP-specific effects and control flows are manifest, enabling reasoning about them.
 %
-Given that algebraic effects are going mainstream, with efficient implementations, we believe our approach would make library-level CP less ad-hoc and bring it to an even broader audience.
+Furthermore, given that algebraic effects are ``going mainstream''~\citep{dagstuhl-alg-effects-report}, with efficient implementations now available in languages such as OCaml~\citep{sivaramakrishnan-ocaml-effect-handlers}, we believe our proposed approach would make library-level CP less ad-hoc and bring it to a broader audience.
 
-We carry out our verified implementation in the proof assistant Agda and extract a Haskell implementation.
-%
-The same approach can be easily ported to a different language that supports algebraic effects with confidence in its correctness, given that a model of it has been verified. \lk{Let me try to tweak this sentence}
+% The same approach can be easily ported to a different language that supports algebraic effects with confidence in its correctness, given that a model of it has been verified.
 
-In this paper, we outline our plan for building a verified library-level CP language with algebraic effects.
+%We carry out our verified implementation in the proof assistant Agda and extract a Haskell implementation.
 %
-In particular, we show how to define choreographies and EPP with algebraic effects in Agda.
-%
-In the end, we state the correctness condition for EPP and some next steps.
-\lk{add pointers to following sections}
+In the rest of the paper, we set up a framework for programming with algebraic effects in Agda (\Cref{sec:alg-eff-agda}), which we then use to implement a prototyp library-level CP framework (\Cref{sec:cp-alg-eff}).  Finally, we discuss our ongoing work on leveraging our approach to prove the correctness of our library-level CP implementation (\Cref{sec:next}).  This paper is a literate Agda program.
+
+
+

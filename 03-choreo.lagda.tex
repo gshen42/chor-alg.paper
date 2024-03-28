@@ -1,6 +1,7 @@
 \section{Choreographic Programming with Algebraic Effects}
+\label{sec:cp-alg-eff}
 
-In this section, we use the algebraic effects framework from previous section to implement a CP language.
+In this section, we use the algebraic effects framework from the previous section to implement a CP language.
 %
 Our CP language is simplified and only contains local computations and communication.
 %
@@ -14,7 +15,7 @@ Finally, we define endpoint projection as location-specific effect handlers for 
 
 We assume a local language of signature 𝕃 that each node uses for local computations, and we parameterize our CP language by it.
 %
-We use locations Loc to refer to nodes in a distributed application and define them as Strings.
+We use locations Loc to refer to nodes in a distributed system and define them as Strings.
 %
 However, any data type with decidable equality would suffice.
 
@@ -102,14 +103,15 @@ Signature ℙ specifies the three operations of processes and their arity:
 \item
   \AgdaInductiveConstructor{`locally} performs a local computation of type \AgdaDatatype{Term} 𝕃 $A$ and returns a value of type $A$.
 \item
-  \AgdaInductiveConstructor{`send} sends a message of type $A$ to a location and returns a unit.
+  \AgdaInductiveConstructor{`send} sends a message of type $A$ to a location and returns a unit value.
 \item
   \AgdaInductiveConstructor{`recv} receives a message from a location and returns a value of type $A$.
   %
   Here, the performer of the \AgdaInductiveConstructor{`recv} needs to specify what type of value it is expected to receive.
 \end{itemize}
 %
-We also define \AgdaDatatype{Process} as a shorthand for terms using operations from ℙ and some other help functions.
+We also define \AgdaDatatype{Process} as a shorthand for terms using operations from ℙ. Finally, we define the helper functions \AgdaFunction{send}, \AgdaFunction{receive}, and \AgdaFunction{locally}.
+
 \subsection{Choreographies}
 \label{sec:choreo}
 
@@ -185,24 +187,24 @@ One issue that every library-level CP language needs to deal with is how to repr
 Located values are variables in a choreography that denote values at different locations.
 %
 We give them types $A \ @ \ l$, which intuitively means a value of type $A$ at location $l$.
-%
-Previous library-level CP languages often define located values as a union of a plain value and a unit --- an option type --- and have the unspoken invariant that when projecting to location $l$, values at $l$ are a plain value; otherwise, a unit.
-%
-These languages internally use an unwrap function to extract the plain value from the union.
-%
-However, the unwrap function is very non-total because the union could be a unit, but these languages meticulously use it only in situations where the union is a plain value (implicitly use the invariant), so the non-totality never shows up.
-%
-This approach does not work in Agda as it demands the totality of every function.
 
-For this reason, we take an alternative approach to located values where they are kept abstract and erased before projection in a way that respects the invariant by construction.
+Existing library-level CP languages such as HasChor~\citep{shen-2023} define located values as a union of a plain value and a unit value --- an option type --- and have the unspoken invariant that when projecting to location $l$, values at $l$ are a plain value, and otherwise, a unit value.
+%
+Internally, HasChor uses an unwrap function to extract the plain value from the union.
+%
+The unwrap function is non-total because the union could be a unit value, but HasChor meticulously use it only in situations where the union is a plain value (implicitly use the invariant), so the non-totality never shows up.
+%
+This approach does not work in Agda, as it demands that every function be total.
+%
+For this reason, we take an alternative approach to located values, in which they are kept abstract and erased before projection in a way that respects the invariant by construction.
 %
 We first define \AgdaFunction{At}, a type-level function that captures the interface of located values.
 %
-Then, we define \AgdaFunction{focus}, a particular At that we will use in endpoint projection (we will show another \AgdaFunction{At} in the next section).
+Then, we define \AgdaFunction{focus}, a particular \AgdaFunction{At} that we will use in endpoint projection (we will show another \AgdaFunction{At} in the next section).
 %
-Intuitively, \AgdaFunction{focus} $l$ erases a located value of type $A \ @ \ s$ to $A$ if $l$ is equal to $s$; otherwise, to a unit.
+Intuitively, \AgdaFunction{focus} $l$ erases a located value of type $A \ @ \ s$ to $A$ if $l$ is equal to $s$; otherwise, to a unit value.
 
-The signature ℂ specifies the two main opeartions of choreographies using one overloaded constructor:
+The signature ℂ specifies the two main operations of choreographies using one overloaded constructor:
 %
 \begin{itemize}
 \item
@@ -213,11 +215,11 @@ The signature ℂ specifies the two main opeartions of choreographies using one 
 
 We also define \AgdaFunction{Choreo} as a shorthand for terms using operations from ℂ abstracted over a particular \AgdaFunction{At}.
 %
-Note that we also require the \AgdaFunction{At} to be an instance of monads for any location $l$, which allows us to chain together located values.
+We also require \AgdaFunction{At} to be an instance of monads for any location $l$, which allows us to chain together located values.
 %
 Our focus is a monad because the identity functor and units are both monads.
 %
-We also define two helpful functions for writing choreographies.
+We also define two helpful functions, \AgdaFunction{\_▷\_} and \AgdaFunction{\_⇒\_◇\_}, for writing choreographies.
 
 \subsection{Endpoint Projection} \label{sec:epp}
 
@@ -241,17 +243,17 @@ epp c l = interp alg return c
 \label{fig:epp}
 \end{figure}
 
-We are now ready to define endpoint projection, the process of turning a choreography into a process for a target location.
+We can now define endpoint projection, the process of turning a choreography into a process for a target location.
 %
 \Cref{fig:epp} presents our implementation of EPP.
 %
-The function \AgdaFunction{epp} takes a choreography $c$, a target location $l$, and uses the effect handler \AgdaFunction{interp} to interpret operations in $c$.
+The function \AgdaFunction{epp} takes a choreography $c$ and a target location $l$, and uses the effect handler \AgdaFunction{interp} to interpret operations in $c$.
 %
 For variables, we return them in the generated process.
 %
-For operations, we construct a \AgdaFunction{ℂ}-Algebra (with all located values erased to $l$'s perspective) \AgdaFunction{alg} on processes, that does one step of interpretation.
+For operations, we construct a \AgdaFunction{ℂ}-Algebra (with all located values erased from $l$'s perspective) \AgdaFunction{alg} on processes, which does one step of interpretation.
 %
-The only operation we need to interpret is \AgdaInductiveConstructor{`comm}, depending on if $l$ is equal to $s$ and $r$:
+The only operation we need to interpret is \AgdaInductiveConstructor{`comm}, depending on whether $l$ is equal to $s$ and $r$:
 %
 \begin{itemize}
 \item

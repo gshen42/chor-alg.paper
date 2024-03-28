@@ -1,24 +1,15 @@
-\section{Proofs of Correctness (Work in Progress)}
 
-\lk{We will have maybe room for 2 paragraphs at the end of p. 6 for everything we want to say about next steps.  No room for code.  It'll need to just be a few sentences.}
-
-\lk{An obvious next step is to leverage the algebraic-effects-based formulation of CP presented in the last two sections and prove the correctness of EPP, as well as follow-on properties such as deadlock freedom.}
-
-\lk{Given a choreographic semantics ⇒ᶜ and a network semantics ⇒ⁿ, \emph{completeness} of EPP would say that \lk{insert prose explanation}, that is, \lk{insert math}, while \emph{soundness} of EPP would say that \lk{insert prose explanation}, that is, \lk{insert math}.  However, this correctness condition is very strong, and may be too strong for our setting.  We are working on defining an appropriate semantics ⇒ᶜ and ⇒ⁿ and notions of soundness and completeness that are appropriate for our setting.}
-
-\lk{TODO: what about deadlock freedom?}
-
-In this section, we define the correctness condition for our CP language.
-%
-The goal is to show a form of semantic equivalence that EPP preserves and reflects the semantics of the original choreography.
-%
-Traditionally, this form of semantic equivalence is decomposed into two separate theorems --- soundness and completeness.
-%
-The exact definitions and proofs are still work in progress, here we only show their types to demonsrtate the key idea.
-%
-Note that we are not proposing anything new here.
-%
-Instead, we are merely showing that our algebraic effects approach is capable of doing the standard proofs.
+%% In this section, we define the correctness condition for our CP language.
+%% %
+%% The goal is to show a form of semantic equivalence that EPP preserves and reflects the semantics of the original choreography.
+%% %
+%% Traditionally, this form of semantic equivalence is decomposed into two separate theorems --- soundness and completeness.
+%% %
+%% The exact definitions and proofs are still work in progress, here we only show their types to demonsrtate the key idea.
+%% %
+%% Note that we are not proposing anything new here.
+%% %
+%% Instead, we are merely showing that our algebraic effects approach is capable of doing the standard proofs.
 
 \begin{code}[hide]
 open import 02-algeff
@@ -33,13 +24,13 @@ open module 03-choreo′ = 03-choreo 𝕃
 open 03-choreo′.Process
 \end{code}
 
-\subsection{Semantics of Choreographies and Networks}
+%% \subsection{Semantics of Choreographies and Networks}
 
-We first define operational semantics for choreographies and networks.
+%% We first define operational semantics for choreographies and networks.
+%% %
+%% The operational sematnics for choreographies treats all located values as normal values and has the following definition:
 %
-The operational sematnics for choreographies treats all located values as normal values and has the following definition:
-%
-\begin{center}\begin{code}
+\begin{center}\begin{code}[hide]
 opaque
   noAt : At
   noAt A _ = A
@@ -55,23 +46,23 @@ instance
     noAt-monad = mkRawMonad _ (λ x → x) (λ x f → f x)
 \end{code}
 %
-A network is a mapping from locations to processes, and a partially applied EPP interprets a choreography as a network.
+%% A network is a mapping from locations to processes, and a partially applied EPP interprets a choreography as a network.
+%% %
+%% Networks have the following operational semantics:
 %
-Networks have the following operational semantics:
-%
-\begin{center}\begin{code}
+\begin{center}\begin{code}[hide]
 data _⇒ⁿ_ {G : Loc → Set} :
   ((l : Loc) → Term ℙ (G l)) → ((l : Loc) → Term ℙ (G l)) → Set where
 -- work in progress
 \end{code}\end{center}
 %
-Note that each process returns a value of type \textit{G \ l}, which allows each location to have a different return value.
+%% Note that each process returns a value of type \textit{G \ l}, which allows each location to have a different return value.
 
-\subsection{Soundness and Completeness}
+%% \subsection{Soundness and Completeness}
 
-Here is the standard definition of soundness and completeness:
+%% Here is the standard definition of soundness and completeness:
 %
-\begin{center}\begin{code}
+\begin{center}\begin{code}[hide]
 postulate
   soundness : ∀ {F} (c c′ : Choreo F) →
     epp c ⇒ⁿ epp c′ → c ⇒ᶜ c′
@@ -80,6 +71,6 @@ postulate
     c ⇒ᶜ c′ → epp c ⇒ⁿ epp c′
 \end{code}\end{center}
 %
-Soundness (Completeness) says that the network preserves (reflects) the semantics of the original choreography.
-%
-We note that this is a form of bisimulation where the two systems are related in locked steps.
+%% Soundness (Completeness) says that the network preserves (reflects) the semantics of the original choreography.
+%% %
+%% We note that this is a form of bisimulation where the two systems are related in locked steps.
