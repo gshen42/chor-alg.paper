@@ -16,9 +16,9 @@ open module 04-proofs′ = 04-proofs 𝕃
 
 Our next step will be to leverage the algebraic-effects-based formulation of CP presented in the last two sections to prove the correctness of endpoint projection, as well as follow-on properties such as deadlock freedom.
 
-At a high level, given a choreographic semantics \AgdaDatatype{\_⇒ᶜ\_} and a network semantics \AgdaDatatype{\_⇒ⁿ\_}, \emph{soundness} of endpoint projection would say that the network \emph{preserves} the semantics of the original choreography.
+At a high level, given a choreographic semantics \AgdaDatatype{\_⇒ᶜ\_} and a network semantics \AgdaDatatype{\_⇒ⁿ\_}, \emph{soundness} of endpoint projection would say that the projected network \emph{preserves} the semantics of the original choreography.
 %
-That is, given choreographies $c$ and $c'$,
+That is, for choreographies $c$ and $c'$,
 %
 \begin{code}[hide]
 _ = ∀ {F} (c c′ : Choreo F) →
@@ -28,7 +28,7 @@ _ = ∀ {F} (c c′ : Choreo F) →
   epp c ⇒ⁿ epp c′ → c ⇒ᶜ c′
 \end{code}.
 %
-\emph{Completeness} of EPP, on the other hand, would say that the network \emph{reflects} the semantics of the original choreography, that is, given choreographies $c$ and $c′$,
+\emph{Completeness} of EPP, on the other hand, would say that the network \emph{reflects} the semantics of the original choreography, that is, given choreographies $c$ and $c'$,
 %
 \begin{code}[hide]
 _ = ∀ {F} (c c′ : Choreo F) →
@@ -38,12 +38,12 @@ _ = ∀ {F} (c c′ : Choreo F) →
   c ⇒ᶜ c′ → epp c ⇒ⁿ epp c′
 \end{code}.
 %
-So the two transition systems are in a bisimulation.
+If these correctness conditions hold, the transition systems \AgdaDatatype{\_⇒ᶜ\_} and \AgdaDatatype{\_⇒ⁿ\_} are in bisimulation,
 %
-If choreographies enjoy a progress property, networks also have it, implying they're deadlock-free.
+and if choreographies enjoy a progress property, networks also have it, implying that they are deadlock-free.
 %
-However, these correctness conditions are very strong --- it prohibits EPP from doing rewritings that changes the behaviors of the network but compute the same result.
+However, the above definitions of soundness and completeness may be too strong --- for instance, they prohibit EPP from doing rewritings that change the behaviors of the network but compute the same result.
 %
-Thus, we're working on a more relaxed correctness condition that permits more interesting behaviors in networks while still maintaining deadlock freedom.
+Thus, we are working on more relaxed correctness conditions that permit more interesting behaviors in networks while still maintaining deadlock-freedom.
 
 In the longer term, we want to bring our algebraic-effects-based formulation of CP to languages with efficient native support for algebraic effects, such as OCaml and Koka.
