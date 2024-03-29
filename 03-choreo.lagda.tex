@@ -208,7 +208,7 @@ The signature ℂ specifies the two main operations of choreographies using one 
 %
 \begin{itemize}
 \item
-  \AgdaInductiveConstructor{`comm} $s$ $s$ $t$ denotes a local computation $t$ at location $l$.
+  \AgdaInductiveConstructor{`comm} $s$ $s$ $t$ denotes a local computation $t$ at location $s$.
 \item
   \AgdaInductiveConstructor{`comm} $s$ $r$ $t$ denotes location $l$ sends the result of a computation $t$ to location $r$.
 \end{itemize}
@@ -261,7 +261,7 @@ The only operation we need to interpret is \AgdaInductiveConstructor{`comm}, dep
 \item
   If $l$ equals $s$ but not $r$, meaning the target location is the sender, we interpret the operation as a local computation followed by a send and the continuation.
 \item
-  If $l$ equals $r$ but not $s$, meaning the target location is the receier, we interpret the operation as a receive followed by the continuation.
+  If $l$ equals $r$ but not $s$, meaning the target location is the receiver, we interpret the operation as a receive followed by the continuation.
 \item
   If $l$ equals neither $s$ nor $r$, meaning the target location is not involved, we just return the continuation.
 \end{itemize}
