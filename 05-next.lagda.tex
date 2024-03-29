@@ -1,29 +1,49 @@
 \section{Next Steps}
 \label{sec:next}
 
+\begin{code}[hide]
+open import 02-algeff
+
+module 05-next (𝕃 : Sig) where
+
+import 03-choreo
+import 04-proofs
+
+open module 03-choreo′ = 03-choreo 𝕃
+open module 04-proofs′ = 04-proofs 𝕃
+
+\end{code}
+
 Our next step will be to leverage the algebraic-effects-based formulation of CP presented in the last two sections to prove the correctness of endpoint projection, as well as follow-on properties such as deadlock freedom.
 
-\lk{TODO: fix typesetting here}
-
-At a high level, given a choreographic semantics \AgdaFunction{⇒ᶜ} and a network semantics \AgdaFunction{⇒ⁿ}, \emph{completeness} of endpoint projection would say that the network \emph{preserves} the semantics of the original choreography. That is, given choreographies \AgdaArgument{c} and \AgdaArgument{c′}, \AgdaRef{epp c ⇒ⁿ epp c′ → c ⇒ᶜ c′}.
+At a high level, given a choreographic semantics \AgdaDatatype{\_⇒ᶜ\_} and a network semantics \AgdaDatatype{\_⇒ⁿ\_}, \emph{soundness} of endpoint projection would say that the network \emph{preserves} the semantics of the original choreography.
 %
-\emph{Soundness} of EPP, on the other hand, would say that the network \emph{reflects} the semantics of the original choreography, that is, given choreographies \AgdaArgument{c} and \AgdaArgument{c′}, \AgdaRef{c ⇒ᶜ c′ → epp c ⇒ⁿ epp c′}.
+That is, given choreographies $c$ and $c'$,
 %
-However, these correctness conditions are very strong, and may be too strong for our setting.
+\begin{code}[hide]
+_ = ∀ {F} (c c′ : Choreo F) →
+\end{code}
 %
-For example, we want our choreographic language to support conditionals and recursion (which might require a coinductive variant of \textit{Term}).
+\begin{code}[inline]
+  epp c ⇒ⁿ epp c′ → c ⇒ᶜ c′
+\end{code}.
 %
-Therefore, are working on defining an appropriate choreographic semantics \AgdaFunction{⇒ᶜ} and network semantics \AgdaFunction{⇒ⁿ}, and establishing notions of soundness and completeness that are appropriate for our setting.
+\emph{Completeness} of EPP, on the other hand, would say that the network \emph{reflects} the semantics of the original choreography, that is, given choreographies $c$ and $c′$,
+%
+\begin{code}[hide]
+_ = ∀ {F} (c c′ : Choreo F) →
+\end{code}
+%
+\begin{code}[inline]
+  c ⇒ᶜ c′ → epp c ⇒ⁿ epp c′
+\end{code}.
+%
+So the two transition systems are in a bisimulation.
+%
+If choreographies enjoy a progress property, networks also have it, implying they're deadlock-free.
+%
+However, these correctness conditions are very strong --- it prohibits EPP from doing rewritings that changes the behaviors of the network but compute the same result.
+%
+Thus, we're working on a more relaxed correctness condition that permits more interesting behaviors in networks while still maintaining deadlock freedom.
 
-In the longer term, we want to bring our algebraic-effects-based formulation of CP to languages with efficient native support for algebraic effects, such as OCaml. 
-
-%% \subsection{Liberate EPP and Relax the Correctness Condition}
-
-%% Being at the library-level means that user can write their own version of EPP easily.
-%% %
-%% These EPPs might do various kinds of optimization or adapt to a customized communication pattern, which do not necessarily preserve or reflect the semantics of the original choreography.
-%% %
-%% The standard correctness condition asks for a strong bisimulation, meaning the two systems have the same \emph{behavior}.
-%% %
-%% Maybe the two systems compute the same value, or simply the resulting network being deadlock-free is enough
-
+In the longer term, we want to bring our algebraic-effects-based formulation of CP to languages with efficient native support for algebraic effects, such as OCaml.
