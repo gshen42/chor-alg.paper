@@ -4,25 +4,25 @@ Choreographic programming~(CP)~\citep{montesi-2013, montesi-2023} is a paradigm 
 %
 In CP the programmer writes one, unified program, called a \emph{choreography}, that is then compiled to individual programs for each node via a compilation step called \emph{endpoint projection} (EPP).
 %
-For example, the following choreography describes a distributed data processing pipeline, involving nodes Alice, Bob, and Carol, which respectively run functions $\mathsf{f}$, $\mathsf{g}$, and $\mathsf{h}$ on their input:
+For example, the following choreography describes a distributed data processing pipeline, involving nodes Alice, Bob, and Carol, which respectively run functions $f$, $g$, and $h$ on their input:
 %
 \begin{equation*}
   \begin{split}
-    x \leftarrow \; & \locally{Alice}{\mathsf{getInput}} \\
-    y \leftarrow \; & \comm{Alice}{Bob}{\mathsf{f}(x)} \\
-    z \leftarrow \; & \comm{Bob}{Carol}{\mathsf{g}(y)} \\
-    w \leftarrow \; & \comm{Carol}{Alice}{\mathsf{h}(z)} \\
-                    & \locally{Alice}{\mathsf{showResults}(w)} \\
+    x \leftarrow \; & \locally{\mathrm{Alice}}{\mathsf{getInput}} \\
+    y \leftarrow \; & \comm{\mathrm{Alice}}{\mathrm{Bob}}{f(x)} \\
+    z \leftarrow \; & \comm{\mathrm{Bob}}{\mathrm{Carol}}{g(y)} \\
+    w \leftarrow \; & \comm{\mathrm{Carol}}{\mathrm{Alice}}{h(z)} \\
+                    & \locally{\mathrm{Alice}}{\mathsf{showResults}(w)} \\
   \end{split}
 \end{equation*}
 %
 Here, we use $\leftarrow$ for variable bindings;
 %
-$\locally{Alice}{\mathsf{t}}$ denotes a local computation $\mathsf{t}$ at Alice;
+$\locally{\mathrm{Alice}}{t}$ denotes a local computation $t$ at Alice;
 %
-and $\comm{Alice}{Bob}{\mathsf{t}}$ denotes communication from Alice to Bob with message $\mathsf{t}$.
+and $\comm{\mathrm{Alice}}{\mathrm{Bob}}{t}$ denotes communication from Alice to Bob with message $t$.
 %
-In this choreography, Alice first gets some input locally, processes it with $\mathsf{f}$, and passes the result to Bob, who processes it with $\mathsf{g}$ and passes the result to Carol, who processes it with $\mathsf{h}$ and passes it back to Alice to be displayed to the user.
+In this choreography, Alice first gets some input locally, processes it with $f$, and passes the result to Bob, who processes it with $g$ and passes the result to Carol, who processes it with $h$ and passes it back to Alice to be displayed to the user.
 %
 To get an executable program for each node, we can apply endpoint projection to the choreography, resulting in individual programs for Alice, Bob, and Carol:
 %
@@ -32,8 +32,8 @@ To get an executable program for each node, we can apply endpoint projection to 
   \begin{equation*}
     \begin{split}
       x \leftarrow \; & \mathsf{getInput} \\
-                      & \mathsf{send}(Bob, \mathsf{f}(x)) \\
-      w \leftarrow \; & \mathsf{recv}(Carol) \\
+                      & \mathsf{send}(\mathrm{Bob}, f(x)) \\
+      w \leftarrow \; & \mathsf{recv}(\mathrm{Carol}) \\
                       & \mathsf{showResults}(w)
     \end{split}
   \end{equation*}
@@ -42,8 +42,8 @@ To get an executable program for each node, we can apply endpoint projection to 
 \begin{minipage}{.3\textwidth}
   \begin{equation*}
     \begin{split}
-      y \leftarrow \; & \mathsf{recv}(Alice) \\
-                      & \mathsf{send}(Carol, \mathsf{g}(y)) \\
+      y \leftarrow \; & \mathsf{recv}(\mathrm{Alice}) \\
+                      & \mathsf{send}(\mathrm{Carol}, g(y)) \\
     \end{split}
   \end{equation*}
 \end{minipage}
@@ -51,8 +51,8 @@ To get an executable program for each node, we can apply endpoint projection to 
 \begin{minipage}{.3\textwidth}
   \begin{equation*}
     \begin{split}
-      z \leftarrow \; & \mathsf{recv}(Bob) \\
-                      & \mathsf{send}(Alice, \mathsf{h}(z)) \\
+      z \leftarrow \; & \mathsf{recv}(\mathrm{Bob}) \\
+                      & \mathsf{send}(\mathrm{Alice}, h(z)) \\
     \end{split}
   \end{equation*}
 \end{minipage}
@@ -74,7 +74,7 @@ which has informed the design of practical, full-featured standalone CP language
 %% Also, sometimes they have to reinvent the wheels to implement features like polymorphism, higher-order functions, and asynchrony that is already in the existing language.
 
 Recent work has introduced \emph{library-level} CP languages~\citep{shen-2023, kashiwa-2023}, in which choreographies and EPP are completely expressed as constructs in an existing host language.  For example, HasChor~\citep{shen-2023}, implements support for CP by means of a domain-specific language embedded in Haskell.
-In HasChor, choreographies are monadic computations in which choreographic operators such as $\locally{}{}$ and $\comm{}{}{}$ may be used, and EPP is carried out by means of \emph{dynamic interpretation} of choreographies at run time.  The recently proposed ChoRus library for choreographic programming in Rust~\citep{kashiwa-2023} takes a similarly dynamic approach.
+In HasChor, choreographies are monadic computations in which choreographic operators such as $\locally{\_}{\_}$ and $\comm{\_}{\_}{\_}$ may be used, and EPP is carried out by means of \emph{dynamic interpretation} of choreographies at run time.  The recently proposed ChoRus library for choreographic programming in Rust~\citep{kashiwa-2023} takes a similarly dynamic approach.
 %
 Library-level CP frameworks have the potential to improve the accessibility and practicality of CP by integrating it into general-purpose programming languages.
 %
