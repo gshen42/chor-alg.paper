@@ -119,14 +119,6 @@ data Term (𝔽 : Sig) (A : Set) : Set₁ where
 The \AgdaInductiveConstructor{var} constructor denotes a variable drawn from some set $A$.
 %
 The \AgdaInductiveConstructor{op} constructor denotes a fully applied operation to some other terms.
-%
-%% One of the reasons why \textit{Term} is called the free algebra is because it is an algebra for any signature $\mathbb{F}$:
-%% %
-%% \begin{center}\begin{code}
-%% term-alg : ∀ {𝔽} {A} → 𝔽 -Alg[ Term 𝔽 A ]
-%% term-alg = op
-%% \end{code}\end{center}
-%% %
 
 In programming, \AgdaDatatype{Term}s correspond to programs where effects are left uninterpreted, with variables being pure computations and operations being effectful computations.
 %

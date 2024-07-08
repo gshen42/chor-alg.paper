@@ -64,15 +64,6 @@ Existing research places CP on a solid theoretical foundation~\citep{montesi-201
 %
 which has informed the design of practical, full-featured standalone CP languages such as Choral~\citep{giallorenzo-2024}.
 
-%some of them are even verified by a formal reasoning system~\citep{pohjola-2022, cruzfillipe-2023}.
-%And people have been using them to build real-world distributed applications~\citep{lugovic-2023}.
-
-%% However, these standalone CP languages are not widely applicable as they do not integrate well with existing language infrastructures.
-%% %
-%% They typically build a separate compiler on top of an existing language --- which is already a significant amount of work -- and have limited tooling and IDE support.
-%% %
-%% Also, sometimes they have to reinvent the wheels to implement features like polymorphism, higher-order functions, and asynchrony that is already in the existing language.
-
 Recent work has introduced \emph{library-level} CP languages~\citep{shen-2023, kashiwa-2023}, in which choreographies and EPP are completely expressed as constructs in an existing host language.  For example, HasChor~\citep{shen-2023}, implements support for CP by means of a domain-specific language embedded in Haskell.
 In HasChor, choreographies are monadic computations in which choreographic operators such as $\locally{\_}{\_}$ and $\comm{\_}{\_}{\_}$ may be used, and EPP is carried out by means of \emph{dynamic interpretation} of choreographies at run time.  The recently proposed ChoRus library for choreographic programming in Rust~\citep{kashiwa-2023} takes a similarly dynamic approach.
 %
@@ -92,10 +83,6 @@ They provide abstract syntax trees for choreographies in which CP-specific effec
 %
 Furthermore, given that algebraic effects are ``going mainstream''~\citep{dagstuhl-alg-effects-report}, with efficient implementations now available in languages such as OCaml~\citep{sivaramakrishnan-ocaml-effect-handlers} and Koka~\citep{leijen-2017}, we believe our proposed approach would make library-level CP less ad-hoc and bring it to a broader audience.
 
-% The same approach can be easily ported to a different language that supports algebraic effects with confidence in its correctness, given that a model of it has been verified.
-
-%We carry out our verified implementation in the proof assistant Agda and extract a Haskell implementation.
-%
 In the rest of the paper, we set up a framework for programming with algebraic effects in Agda (\Cref{sec:alg-eff-agda}), which we then use to implement a prototype library-level CP framework (\Cref{sec:cp-alg-eff}).  Finally, we discuss our ongoing work on leveraging our approach to prove the correctness of our library-level CP implementation (\Cref{sec:next}).  This paper is a literate Agda program.
 
 
